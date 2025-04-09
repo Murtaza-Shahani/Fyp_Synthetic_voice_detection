@@ -22,12 +22,13 @@ try:
     y, sr = librosa.load(audio_path, sr=22050)
     print(f"Audio loaded: {len(y)} samples at {sr} Hz")
 
-    # Extract MFCC features
+    # Extract MFCC features (Ensure 32 MFCCs per frame)
     mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=32)
     print(f"Extracted MFCCs shape: {mfccs.shape}")
 
-    # Reshape for model input
-    mfccs = np.mean(mfccs, axis=1).reshape(1, 32, 1)
+    # Ensure the input shape is (1, 32, 1) for the model
+    # Average MFCCs across time frames and reshape
+    mfccs = np.mean(mfccs, axis=1).reshape(1, 32, 1)  # Now it's 32 MFCCs and 1 channel
     print(f"Final input shape before prediction: {mfccs.shape}")
 
     # Load model
@@ -40,11 +41,11 @@ try:
     print(f"Raw prediction: {prediction}")
 
     # Format response
-    confidence = float(prediction[0, 0])
-    label = "Fake" if confidence > 0.5 else "Real"
+    confidence = float(prediction[0, 0] * 100)
+    label = "Fake" if confidence > 50 else "Real"  # Adjusted the logic based on the confidence value
     result = {
         "label": label,
-        "confidence": round(confidence, 4)
+        "confidence": round(confidence, 2)
     }
 
     print(json.dumps(result, ensure_ascii=False))
