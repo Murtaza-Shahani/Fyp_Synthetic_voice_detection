@@ -54,9 +54,13 @@ app.post("/analyze", upload.single("audio"), (req, res) => {
     }
 
     try {
-      const prediction = JSON.parse(result);
+      // Extract last valid JSON line from Python output
+      const lines = result.trim().split("\n");
+      const lastLine = lines.reverse().find(line => line.trim().startsWith("{") && line.trim().endsWith("}"));
+      const prediction = JSON.parse(lastLine);
       res.json(prediction);
     } catch (error) {
+      console.error("JSON Parse Error:", error.message);
       res.status(500).json({ error: "Invalid response from Python script." });
     }
   });

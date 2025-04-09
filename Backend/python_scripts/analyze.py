@@ -22,31 +22,34 @@ try:
     y, sr = librosa.load(audio_path, sr=22050)
     print(f"Audio loaded: {len(y)} samples at {sr} Hz")
 
-    # Extract MFCC features - using 32 to match the model's expected input
+    # Extract MFCC features
     mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=32)
     print(f"Extracted MFCCs shape: {mfccs.shape}")
 
-    # Ensure correct shape for model input (reshaping to match expected input)
-    mfccs = np.mean(mfccs, axis=1).reshape(1, 32, 1)  
+    # Reshape for model input
+    mfccs = np.mean(mfccs, axis=1).reshape(1, 32, 1)
     print(f"Final input shape before prediction: {mfccs.shape}")
 
     # Load model
     model = load_model("model/deepfake_voice.h5", compile=False)
     print("Model loaded successfully")
-
-    # Get the model's expected input shape
-    model_input_shape = model.input_shape
-    print(f"Model expected input shape: {model_input_shape}")
+    print(f"Model expected input shape: {model.input_shape}")
 
     # Predict
     prediction = model.predict(mfccs)
     print(f"Raw prediction: {prediction}")
 
-    # Convert result to JSON and ensure UTF-8 encoding
-    result = {"prediction": float(prediction[0, 0])}  # Assuming single output
-    print(json.dumps(result, ensure_ascii=False))  # UTF-8 encoding fix
+    # Format response
+    confidence = float(prediction[0, 0])
+    label = "Fake" if confidence > 0.5 else "Real"
+    result = {
+        "label": label,
+        "confidence": round(confidence, 4)
+    }
+
+    print(json.dumps(result, ensure_ascii=False))
 
 except Exception as e:
-    error_message = str(e).encode('utf-8', 'ignore').decode('utf-8')  # Fix encoding issue
-    print(json.dumps({"error": error_message}, ensure_ascii=False))  
+    error_message = str(e).encode('utf-8', 'ignore').decode('utf-8')
+    print(json.dumps({"error": error_message}, ensure_ascii=False))
     sys.exit(1)
