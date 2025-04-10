@@ -38,14 +38,19 @@ try:
 
     # Predict
     prediction = model.predict(mfccs)
-    print(f"Raw prediction: {prediction}")
+    print(f"Raw prediction (probabilities): {prediction}")
 
-    # Format response
-    confidence = float(prediction[0, 0] * 100)
-    label = "Fake" if confidence > 50 else "Real"  # Adjusted the logic based on the confidence value
+    # Print prediction value and confidence score for debugging
+    print(f"Prediction value: {prediction[0][0]} (Raw probability)")
+    confidence = float(prediction[0][0] * 100)  # The confidence score
+
+    # Assuming model outputs 0 or 1
+    #label = "Fake" if prediction[0][0] == 1 else "Real"  # Directly check if prediction is 0 or 1
+    # Decision based on probability threshold
+    label = "Fake" if prediction[0][0] > 0.5 else "Real"
     result = {
         "label": label,
-        "confidence": round(confidence, 2)
+        "confidence": round(confidence, 2)  # Print the score as it is given by the model
     }
 
     print(json.dumps(result, ensure_ascii=False))

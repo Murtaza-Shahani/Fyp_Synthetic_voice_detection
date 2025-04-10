@@ -75,11 +75,30 @@ function Detection({ isHome = false }) {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 pt-16">
-        <section className="text-white py-16" style={isHome ? {} : { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
+        <section
+          className="text-white py-16"
+          style={
+            isHome
+              ? {}
+              : {
+                  backgroundImage: `url(${backgroundImage})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
+                }
+          }
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className={`${isHome ? "inline-block bg-blue-600 rounded-lg px-6 py-4" : ""}`}>
+            <div
+              className={`${
+                isHome ? "inline-block bg-blue-600 rounded-lg px-6 py-4" : ""
+              }`}
+            >
               <h1 className="text-4xl font-bold mb-4">Audio Detection</h1>
-              <p className="text-lg max-w-3xl mx-auto">Upload your audio file to analyze and determine if it contains synthetic voice elements.</p>
+              <p className="text-lg max-w-3xl mx-auto">
+                Upload your audio file to analyze and determine if it contains
+                synthetic voice elements.
+              </p>
             </div>
           </div>
         </section>
@@ -91,19 +110,41 @@ function Detection({ isHome = false }) {
             <div className="bg-white p-8 rounded-lg shadow-md">
               <form onSubmit={handleSubmit}>
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold mb-4">Upload Audio File</h2>
-                  <p className="text-gray-600 mb-4">Supported formats: MP3, WAV, M4A (Max size: 10MB)</p>
+                  <h2 className="text-2xl font-bold mb-4">
+                    Upload Audio File
+                  </h2>
+                  <p className="text-gray-600 mb-4">
+                    Supported formats: MP3, WAV, M4A (Max size: 10MB)
+                  </p>
                   <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-8 mb-4">
-                    <input type="file" accept="audio/*" onChange={handleFileChange} className="hidden" id="audio-upload" />
-                    <label htmlFor="audio-upload" className="flex flex-col items-center cursor-pointer">
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="audio-upload"
+                    />
+                    <label
+                      htmlFor="audio-upload"
+                      className="flex flex-col items-center cursor-pointer"
+                    >
                       <i className="fas fa-upload text-gray-400 text-4xl mb-2"></i>
-                      <span className="text-gray-500">{file ? file.name : "Click to upload or drag and drop"}</span>
+                      <span className="text-gray-500">
+                        {file ? file.name : "Click to upload or drag and drop"}
+                      </span>
                     </label>
                   </div>
-                  {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+                  {error && (
+                    <p className="text-red-500 text-sm mb-4">{error}</p>
+                  )}
                 </div>
                 <div className="mt-6">
-                  <Button type="submit" variant="primary" className="w-full" disabled={!file || isAnalyzing}>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    className="w-full"
+                    disabled={!file || isAnalyzing}
+                  >
                     {isAnalyzing ? "Analyzing..." : "Analyze Audio"}
                   </Button>
                 </div>
@@ -115,7 +156,17 @@ function Detection({ isHome = false }) {
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium">Detection Result:</span>
-                      <span className={`font-bold ${result.isReal ? "text-green-600" : "text-red-600"}`}>{result.isReal ? "Real Voice" : "Synthetic Voice"}</span>
+                      <span
+                        className={`font-bold ${
+                          // 📝 Changed line: Inverted the condition
+                          !result.isReal
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {/* 📝 Changed line: Inverted the text logic */}
+                        {!result.isReal ? "Real Voice" : "Synthetic Voice"}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="font-medium">Confidence Score:</span>
@@ -124,12 +175,38 @@ function Detection({ isHome = false }) {
                   </div>
                   <div className="mb-6">
                     <h4 className="font-medium mb-2">Audio Spectrum</h4>
-                    <ReactAudioSpectrum id="audio-spectrum" height={200} width={640} audioId="audio-element" capColor="blue" capHeight={2} meterWidth={2} meterCount={512} meterColor={[{ stop: 0, color: "#f00" }, { stop: 0.5, color: "#0f0" }, { stop: 1, color: "#00f" }]} gap={4} />
-                    <audio id="audio-element" src={audioUrl} controls />
+                    <ReactAudioSpectrum
+                      id="audio-spectrum"
+                      height={200}
+                      width={640}
+                      audioId="audio-element"
+                      capColor="blue"
+                      capHeight={2}
+                      meterWidth={2}
+                      meterCount={512}
+                      value={1}
+                      borderColor={"transparent"}
+                      fftSize={512}
+                      backgroundColor={"#f0f0f0"}
+                      gradientStops={[0, 0.5, 1]}
+                      gradientColors={["#4f46e5", "#06b6d4", "#3b82f6"]}
+                    />
+                    {audioUrl && (
+                      <audio
+                        id="audio-element"
+                        src={audioUrl}
+                        controls
+                        className="w-full mt-4"
+                      />
+                    )}
                   </div>
-                  <div className="flex justify-center">
-                    <Button type="button" variant="secondary" onClick={resetForm}>Analyze Another File</Button>
-                  </div>
+                  <Button
+                    onClick={resetForm}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    Analyze Another File
+                  </Button>
                 </div>
               )}
             </div>
