@@ -222,31 +222,20 @@ function Contact({ isHome = false }) {
                         href="tel:+1234567890"
                         className="text-blue-600 hover:underline"
                       >
-                        +92 124-567890
+                        +92 3083376449
                       </a>
                       <br />
-                      Toll-free:{" "}
+                      What's App:{" "}
                       <a
                         href="tel:+18001234567"
                         className="text-blue-600 hover:underline"
                       >
-                        +92 124-567890
+                        +92 3150755174
                       </a>
                     </p>
                   </div>
 
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      Business Hours
-                    </h3>
-                    <p className="text-gray-600">
-                      Monday - Friday: 9:00 AM - 6:00 PM PST
-                      <br />
-                      Saturday: 10:00 AM - 4:00 PM PST
-                      <br />
-                      Sunday: Closed
-                    </p>
-                  </div>
+               
                 </div>
 
                 <div className="mt-8">
@@ -286,7 +275,7 @@ function Contact({ isHome = false }) {
                   How accurate is the voice detection system?
                 </h3>
                 <p className="text-gray-600">
-                  Our system achieves an accuracy rate of over 99% in detecting
+                  Our system achieves an accuracy rate of over 90+% in detecting
                   synthetic voices, based on extensive testing with various
                   deepfake technologies.
                 </p>
@@ -297,8 +286,8 @@ function Contact({ isHome = false }) {
                   What file formats are supported?
                 </h3>
                 <p className="text-gray-600">
-                  We support all common audio formats including MP3, WAV, M4A,
-                  FLAC, and OGG. Files should be under 10MB for optimal
+                  We support  common audio formats including MP3, WAV, M4A.
+                 Files should be under 2-8 seconds for optimal
                   processing.
                 </p>
               </div>
@@ -308,7 +297,7 @@ function Contact({ isHome = false }) {
                   How long does the analysis take?
                 </h3>
                 <p className="text-gray-600">
-                  Most audio files are analyzed within 5 seconds, though
+                  Most audio files are analyzed within 20-30 seconds, though
                   processing time may vary depending on file size and
                   complexity.
                 </p>
@@ -317,9 +306,7 @@ function Contact({ isHome = false }) {
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h3 className="text-xl font-bold mb-2">Is my data secure?</h3>
                 <p className="text-gray-600">
-                  Yes, we use end-to-end encryption and do not store your audio
-                  files after analysis. Your privacy and data security are our
-                  top priorities.
+                  Yes, we use end-to-end encryption and do not share your personal data with anyone ,your security is our priority.
                 </p>
               </div>
             </div>

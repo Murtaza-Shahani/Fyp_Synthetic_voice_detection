@@ -78,9 +78,9 @@ function Features({ isHome = false }) {
                   identify artificially generated audio.
                 </p>
                 <p className="mb-6">
-                  The system analyzes over 500 different audio characteristics
+                  The system is trained over  different datasets  audio characteristics
                   to determine if a voice sample is authentic or synthetic, with
-                  accuracy rates exceeding 99%.
+                  accuracy rates exceeding 90+%.
                 </p>
                 <Button variant="primary">Learn More</Button>
               </div>
