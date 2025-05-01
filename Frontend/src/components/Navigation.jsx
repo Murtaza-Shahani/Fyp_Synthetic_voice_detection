@@ -1,7 +1,29 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "./ui/Button";
+import { useState, useEffect } from "react";  // Use state and effect for conditionally showing buttons
 
 function Navigation() {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);  // State to track user login status
+
+  useEffect(() => {
+    // Check if the authToken exists in localStorage to determine if user is logged in
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      setIsLoggedIn(true);  // Set user as logged in if token is found
+    } else {
+      setIsLoggedIn(false);  // User is not logged in if no token
+    }
+  }, []);  // Empty dependency array to check only once when component mounts
+
+  const handleLogout = () => {
+    // Remove the JWT token from localStorage
+    localStorage.removeItem("authToken");
+
+    // Redirect to login page after logout
+    navigate("/login");
+  };
+
   return (
     <nav className="fixed top-0 left-0 w-full bg-white shadow-md z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,12 +48,22 @@ function Navigation() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <Link to="/login">
-              <Button variant="outline">Login</Button>
-            </Link>
-            <Link to="/signup">
-              <Button variant="primary">Sign Up</Button>
-            </Link>
+            {isLoggedIn ? (
+              // Show Logout button if user is logged in
+              <Button variant="outline" onClick={handleLogout}>
+                Logout
+              </Button>
+            ) : (
+              // Show Login and Signup buttons if user is not logged in
+              <>
+                <Link to="/login">
+                  <Button variant="outline">Login</Button>
+                </Link>
+                <Link to="/signup">
+                  <Button variant="primary">Sign Up</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

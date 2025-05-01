@@ -9,6 +9,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+const connectDB = require("./db"); // Import the db.js file
+const userRoutes = require("./routes/userRoutes"); // Import the user routes
+
+// Connect to MongoDB
+connectDB();
 // Ensure uploads folder exists
 const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) {
@@ -105,6 +111,8 @@ app.post("/analyze-tempered", upload.single("audio"), (req, res) => {
     }
   });
 });
+//Routes 
+app.use("/api/users", userRoutes);
 
 // Start server
 const PORT = 5000;

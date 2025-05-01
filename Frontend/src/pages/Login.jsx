@@ -2,16 +2,53 @@ import { useState } from "react";
 import InputField from "../components/ui/InputField";
 import Button from "../components/ui/Button";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";  // Import ToastContainer and toast
+import "react-toastify/dist/ReactToastify.css";  // Import CSS for Toastify
 
 export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
+
+    try {
+      setLoading(true);
+      // Send login data to backend
+      const response = await axios.post("http://localhost:5000/api/users/login", formData);
+
+      if (response.data.token) {
+        // Store the JWT token in localStorage
+        localStorage.setItem("authToken", response.data.token);
+
+        // Show success flash message
+        toast.success("Login successful! Redirecting to dashboard...", {
+          position: "top-center",
+          autoClose: 3000,  // auto close after 3 seconds
+          hideProgressBar: true,
+        });
+
+        // Redirect to dashboard after successful login
+        setTimeout(() => {
+          navigate("/Detection");  // Redirect to your dashboard or home page
+        }, 3000); // Wait for the toast to be shown before redirecting
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || "Login failed. Please try again.");
+      toast.error("Login failed. Please check your credentials.", {
+        position: "top-center",
+        autoClose: 3000,  // auto close after 3 seconds
+        hideProgressBar: true,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,15 +68,15 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && <p className="text-red-500 text-center">{error}</p>}
+
           <InputField
             label="Email"
             placeholder="Enter Email"
             type="email"
             required
             value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           />
 
           <InputField
@@ -48,9 +85,7 @@ export default function Login() {
             type="password"
             required
             value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           />
 
           <div className="flex items-center justify-between">
@@ -58,19 +93,19 @@ export default function Login() {
               <input type="checkbox" className="h-4 w-4 text-blue-600" />
               <span className="ml-2 text-sm text-gray-600">Remember me</span>
             </label>
-            <Link
-              href="/forgot-password"
-              className="text-sm text-blue-600 hover:underline"
-            >
+            <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
               Forgot password?
             </Link>
           </div>
 
-          <Button type="submit" variant="primary" className="w-full">
-            Sign In
+          <Button type="submit" variant="primary" className="w-full" disabled={loading}>
+            {loading ? "Signing In..." : "Sign In"}
           </Button>
         </form>
       </div>
+
+      {/* Toast Container for success/error messages */}
+      <ToastContainer />
     </div>
   );
 }

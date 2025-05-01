@@ -1,10 +1,11 @@
-"use client";
-
 import { useState } from "react";
 import InputField from "../components/ui/InputField";
 import Button from "../components/ui/Button";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import SelectField from "../components/ui/SelectField";
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify"; // Import ToastContainer
+import "react-toastify/dist/ReactToastify.css"; // Import Toastify styles
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -15,6 +16,8 @@ export default function Signup() {
     password: "",
     confirmPassword: "",
   });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const occupations = [
     { value: "student", label: "Student" },
@@ -24,10 +27,32 @@ export default function Signup() {
     { value: "other", label: "Other" },
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle signup logic here
-    console.log(formData);
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post("http://localhost:5000/api/users/add-user", formData);
+      if (response.data.message) {
+        toast.success("Account created successfully! Redirecting to login...");
+        setTimeout(() => {
+          navigate("/login");
+        }, 3000);
+      }
+    } catch (error) {
+      // Handle backend error for email already exists
+      if (error.response?.data?.error === "Email already registered. Please use another email.") {
+        setError("Email already registered. Please use another email.");
+      } else {
+        toast.error(error.response?.data?.error || "Error occurred during signup");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,6 +72,9 @@ export default function Signup() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Flash message for error */}
+          {error && <p className="text-red-500 text-center">{error}</p>}
+
           <div className="grid grid-cols-2 gap-4">
             <InputField
               label="First Name"
@@ -116,11 +144,14 @@ export default function Signup() {
             }
           />
 
-          <Button type="submit" variant="primary" className="w-full">
-            Sign Up
+          <Button type="submit" variant="primary" className="w-full" disabled={loading}>
+            {loading ? "Signing Up..." : "Sign Up"}
           </Button>
         </form>
       </div>
+
+      {/* ToastContainer for displaying toast notifications */}
+      <ToastContainer position="top-center" autoClose={5000} />
     </div>
   );
 }
