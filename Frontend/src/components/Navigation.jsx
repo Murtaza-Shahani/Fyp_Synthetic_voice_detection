@@ -21,7 +21,7 @@ function Navigation() {
     localStorage.removeItem("authToken");
 
     // Redirect to login page after logout
-    navigate("/login");
+    navigate("/");
   };
 
   return (

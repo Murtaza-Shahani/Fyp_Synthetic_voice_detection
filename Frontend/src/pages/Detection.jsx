@@ -4,6 +4,9 @@ import backgroundImage from "../assets/images/background.jpg";
 import ReactAudioSpectrum from "react-audio-spectrum";
 import Guidence from "./Guidence";
 
+import { ToastContainer, toast } from "react-toastify";  // Import ToastContainer and toast
+import "react-toastify/dist/ReactToastify.css";  // Import CSS for Toastify
+
 function Detection({ isHome = false }) {
   // Binary Classification States
   const [fileBinary, setFileBinary] = useState(null);
@@ -20,7 +23,12 @@ function Detection({ isHome = false }) {
   const [audioUrlTempered, setAudioUrlTempered] = useState("");
   const [descriptionTempered, setDescriptionTempered] = useState("");
 
-  // Handle Binary File Upload
+  // Check if the user is logged in by checking the token in localStorage
+  const isUserLoggedIn = () => {
+    return !!localStorage.getItem("authToken"); // Returns true if token exists
+  };
+
+  // Handle Binary File Upload (onChange)
   const handleFileChangeBinary = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -42,7 +50,7 @@ function Detection({ isHome = false }) {
     }
   };
 
-  // Handle Tempered File Upload
+  // Handle Tempered File Upload (onChange)
   const handleFileChangeTempered = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -61,6 +69,32 @@ function Detection({ isHome = false }) {
       setErrorTempered("");
       setFileTempered(selectedFile);
       setAudioUrlTempered(URL.createObjectURL(selectedFile));
+    }
+  };
+
+  // Handle Binary File Input Click (to prevent file dialog for non-logged in users)
+  const handleFileClickBinary = (e) => {
+    if (!isUserLoggedIn()) {
+      e.preventDefault();  // Prevent the file dialog from opening
+      // Show toast message to inform the user that they need to be logged in
+      toast.error("You should be logged in to upload and analyze audio", {
+        position: "top-center",  // Position of the toast on the screen
+        autoClose: 3000,  // The toast will close after 3 seconds
+        hideProgressBar: true,  // Don't show progress bar
+      });
+    }
+  };
+
+  // Handle Tempered File Input Click (to prevent file dialog for non-logged in users)
+  const handleFileClickTempered = (e) => {
+    if (!isUserLoggedIn()) {
+      e.preventDefault();  // Prevent the file dialog from opening
+      // Show toast message to inform the user that they need to be logged in
+      toast.error("You should be logged in to upload and analyze audio", {
+        position: "top-center",  // Position of the toast on the screen
+        autoClose: 3000,  // The toast will close after 3 seconds
+        hideProgressBar: true,  // Don't show progress bar
+      });
     }
   };
 
@@ -161,10 +195,9 @@ function Detection({ isHome = false }) {
         {/* Two Upload Sections */}
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-center text-blue-600 mb-6">Analyze Audio</h1>
+            <h1 className="text-4xl font-bold text-center text-blue-600 mb-6">Analyze Audio</h1>
 
             <div className="flex flex-wrap gap-8 justify-center">
-              
               {/* Binary Classification Section */}
               <div className="w-full md:w-[48%] bg-white p-8 rounded-lg shadow-md">
                 <form onSubmit={handleSubmitBinary}>
@@ -173,7 +206,14 @@ function Detection({ isHome = false }) {
 
                   {/* Upload Area */}
                   <div className="flex flex-col items-center border-2 border-dashed border-gray-300 rounded-lg p-8 mb-4">
-                    <input type="file" accept="audio/*" onChange={handleFileChangeBinary} className="hidden" id="binary-upload" />
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleFileChangeBinary}
+                      onClick={handleFileClickBinary}  // Add onClick handler to prevent file input for non-logged-in users
+                      className="hidden"
+                      id="binary-upload"
+                    />
                     <label htmlFor="binary-upload" className="flex flex-col items-center cursor-pointer">
                       <i className="fas fa-upload text-gray-400 text-4xl mb-2"></i>
                       <span className="text-gray-500">{fileBinary ? fileBinary.name : "Click to upload or drag"}</span>
@@ -237,7 +277,14 @@ function Detection({ isHome = false }) {
 
                   {/* Upload Area */}
                   <div className="flex flex-col items-center border-2 border-dashed border-gray-300 rounded-lg p-8 mb-4">
-                    <input type="file" accept="audio/*" onChange={handleFileChangeTempered} className="hidden" id="tempered-upload" />
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleFileChangeTempered}
+                      onClick={handleFileClickTempered}  // Add onClick handler to prevent file input for non-logged-in users
+                      className="hidden"
+                      id="tempered-upload"
+                    />
                     <label htmlFor="tempered-upload" className="flex flex-col items-center cursor-pointer">
                       <i className="fas fa-upload text-gray-400 text-4xl mb-2"></i>
                       <span className="text-gray-500">{fileTempered ? fileTempered.name : "Click to upload or drag"}</span>
@@ -300,11 +347,12 @@ function Detection({ isHome = false }) {
                   </div>
                 )}
               </div>
-
             </div>
           </div>
         </section>
       </main>
+      {/* Toast Container for success/error messages */}
+      <ToastContainer />
     </div>
   );
 }
