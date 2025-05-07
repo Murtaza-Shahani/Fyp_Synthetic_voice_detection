@@ -42,9 +42,9 @@ function Navigation() {
             <Link to="/detection" className="text-gray-600 hover:text-blue-600">
               Detection
             </Link>
-            <Link to="/contact" className="text-gray-600 hover:text-blue-600">
+            {/* <Link to="/contact" className="text-gray-600 hover:text-blue-600">
               Contact
-            </Link>
+            </Link> */}
           </div>
 
           <div className="flex items-center space-x-4">

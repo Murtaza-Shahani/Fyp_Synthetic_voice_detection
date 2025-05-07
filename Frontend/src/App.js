@@ -4,7 +4,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Features from "./pages/Features";
 import Detection from "./pages/Detection";
-import Contact from "./pages/Contact";
+//import Contact from "./pages/Contact";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -47,14 +47,14 @@ const App = () => {
           </AppLayout>
         }
       />
-      <Route
+      {/* <Route
         path="/contact"
         element={
           <AppLayout>
             <Contact />
           </AppLayout>
         }
-      />
+      /> */}
 
       {/* Full page routes (no Header/Footer) */}
       <Route path="/login" element={<Login />} />

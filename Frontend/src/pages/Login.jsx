@@ -90,12 +90,12 @@ export default function Login() {
 
           <div className="flex items-center justify-between">
             <label className="flex items-center">
-              <input type="checkbox" className="h-4 w-4 text-blue-600" />
-              <span className="ml-2 text-sm text-gray-600">Remember me</span>
+              {/* <input type="checkbox" className="h-4 w-4 text-blue-600" /> */}
+              {/* <span className="ml-2 text-sm text-gray-600">Remember me</span> */}
             </label>
-            <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+            {/* <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
               Forgot password?
-            </Link>
+            </Link> */}
           </div>
 
           <Button type="submit" variant="primary" className="w-full" disabled={loading}>

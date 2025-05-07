@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
+
 import Button from "./ui/Button";
 import backgroundImage from "../assets/images/background.jpg"
 import Image1 from "../assets/images/image1.webp"
@@ -14,6 +16,12 @@ const carouselImages = [
 ];
 
 const Hero = () => {
+  const navigate = useNavigate();
+
+  const handleRedirect = () => {
+    navigate('/detection'); // Replace '/detection' with your actual path
+  };
+
   const [currentImage, setCurrentImage] = useState(0);
 
   useEffect(() => {
@@ -53,9 +61,12 @@ const Hero = () => {
               Accurately detect deepfake audio to safeguard privacy, security,
               and authenticity.
             </p>
-            <Button variant="secondary" size="lg">
-              Get Started
-            </Button>
+            <button 
+      className="bg-blue-800 text-white py-2 px-6 rounded-lg text-lg hover:bg-gray-600"
+      onClick={handleRedirect}
+    >
+      Get Started
+    </button>
           </div>
 
           <div className="relative">

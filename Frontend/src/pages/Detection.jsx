@@ -115,12 +115,18 @@ function Detection({ isHome = false }) {
         body: formData,
       });
       const data = await response.json();
-      setResultBinary({ isReal: data.isReal, confidence: data.confidence });
+  
+      // **Updated line**
+      setResultBinary({
+        label: data.label,        // "Fake" or "Real"
+        confidence: data.confidence,
+      });
     } catch (error) {
       setErrorBinary("Error analyzing audio. Please try again.");
     }
     setIsAnalyzingBinary(false);
   };
+  
 
   // Handle Tempered Analysis
   const handleSubmitTempered = async (e) => {
@@ -228,45 +234,57 @@ function Detection({ isHome = false }) {
                 </form>
 
                 {/* Result */}
-                {resultBinary && (
-                  <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-                    <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">Detection Result:</span>
-                      <span className={`font-bold ${!resultBinary.isReal ? "text-green-600" : "text-red-600"}`}>
-                        {!resultBinary.isReal ? "Real Voice" : "Synthetic Voice"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between mb-4">
-                      <span className="font-medium">Confidence:</span>
-                      <span className="font-bold">{resultBinary.confidence}%</span>
-                    </div>
+{/* Result */}
+{resultBinary && (
+  <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+    <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
+    <div className="flex justify-between mb-2">
+      <span className="font-medium">Detection Result:</span>
+      <span className={`font-bold ${
+        resultBinary.label === "Real" 
+          ? "text-green-600" 
+          : resultBinary.label === "Fake" 
+          ? "text-red-600" 
+          : "text-yellow-600"}`}>
+        {resultBinary.label === "Real" 
+          ? "Real Voice" 
+          : resultBinary.label === "Fake" 
+          ? "Synthetic Voice" 
+          : "Partial Fake Voice"}
+      </span>
+    </div>
+    <div className="flex justify-between mb-4">
+      <span className="font-medium">Confidence:</span>
+      <span className="font-bold">{resultBinary.confidence}%</span>
+    </div>
 
-                    {/* Audio Spectrum */}
-                    <ReactAudioSpectrum
-                      id="audio-spectrum-binary"
-                      height={200}
-                      width={640}
-                      audioId="audio-element-binary"
-                      capColor="blue"
-                      capHeight={2}
-                      meterWidth={2}
-                      meterCount={512}
-                      value={1}
-                      borderColor={"transparent"}
-                      fftSize={512}
-                      backgroundColor={"#f0f0f0"}
-                      gradientStops={[0, 0.5, 1]}
-                      gradientColors={["#4f46e5", "#06b6d4", "#3b82f6"]}
-                    />
-                    {audioUrlBinary && <audio id="audio-element-binary" src={audioUrlBinary} controls className="w-full mt-4" />}
+    {/* Audio Spectrum */}
+    <ReactAudioSpectrum
+      id="audio-spectrum-binary"
+      height={200}
+      width={640}
+      audioId="audio-element-binary"
+      capColor="blue"
+      capHeight={2}
+      meterWidth={2}
+      meterCount={512}
+      value={1}
+      borderColor={"transparent"}
+      fftSize={512}
+      backgroundColor={"#f0f0f0"}
+      gradientStops={[0, 0.5, 1]}
+      gradientColors={["#4f46e5", "#06b6d4", "#3b82f6"]}
+    />
+    {audioUrlBinary && <audio id="audio-element-binary" src={audioUrlBinary} controls className="w-full mt-4" />}
 
-                    {/* Reset */}
-                    <Button onClick={resetFormBinary} variant="secondary" className="w-full mt-4">
-                      Analyze Another File
-                    </Button>
-                  </div>
-                )}
+    {/* Reset Button */}
+    <Button onClick={resetFormBinary} variant="secondary" className="w-full mt-4">
+      Analyze Another File
+    </Button>
+  </div>
+)}
+
+
               </div>
 
               {/* Tempered Detection Section */}
