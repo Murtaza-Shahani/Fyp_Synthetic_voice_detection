@@ -6,6 +6,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 import os
 from pathlib import Path
+import pandas as pd
 
 # Force UTF-8 encoding by setting PYTHONUTF8 environment variable
 os.environ["PYTHONUTF8"] = "1"  # Forces UTF-8 encoding for all string operations
@@ -21,7 +22,7 @@ def load_model_from_h5(model_path):
     print(f"Model's expected input shape: {model.input_shape}")
     return model
 
-# Feature extraction function (based on the notebook's features)
+# Feature extraction function (modified to match notebook features)
 def extract_features(audio_path):
     print(f"Loading audio file from path: {audio_path}")  # Debugging
 
@@ -30,71 +31,66 @@ def extract_features(audio_path):
     print(f"Sanitized audio path: {audio_path}")  # Debugging
     
     try:
-        y, sr = librosa.load(audio_path, sr=22050)  # Load audio at 22050 Hz
+        y, sr = librosa.load(audio_path, sr=None)  # Load audio with the original sampling rate
         print(f"Audio loaded successfully from {audio_path}")  # Debugging
     except Exception as e:
         raise ValueError(f"Error loading audio file: {e}")
     
-    # Extract MFCC features (choose number of MFCC coefficients based on the model's training)
-    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40)  # Use 40 MFCCs
-    mfccs_mean = np.mean(mfccs, axis=1)  # Mean over time frames (shape becomes (40,))
+    # Extract features like in the notebook
 
-    # Extract additional features
-    chroma_stft = np.mean(librosa.feature.chroma_stft(y=y, sr=sr), axis=1)
-    rms = np.mean(librosa.feature.rms(y=y), axis=1)
-    spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=y, sr=sr), axis=1)
-    spectral_bandwidth = np.mean(librosa.feature.spectral_bandwidth(y=y, sr=sr), axis=1)
-    rolloff = np.mean(librosa.feature.spectral_rolloff(y=y, sr=sr), axis=1)
-    zero_crossing_rate = np.mean(librosa.feature.zero_crossing_rate(y=y), axis=1)
+    features = {}
 
-    # Limit the number of additional features to match the expected input size
-    additional_features = np.concatenate([ 
-        chroma_stft[:10],  # 10 chroma features
-        rms[:10],  # 10 RMS features
-        spectral_centroid[:10],  # 10 Spectral Centroid features
-        spectral_bandwidth[:10],  # 10 Spectral Bandwidth features
-        rolloff[:10],  # 10 Spectral Rolloff features
-        zero_crossing_rate[:10]  # 10 Zero Crossing Rate features
-    ])
+    # Chroma (pitch-related feature)
+    features['chroma_stft'] = librosa.feature.chroma_stft(y=y, sr=sr).mean()
 
-    # Combine MFCC and additional features into one feature vector
-    feature_vector = np.concatenate([mfccs_mean, additional_features])
+    # RMS (energy of the signal)
+    features['rms'] = librosa.feature.rms(y=y).mean()
 
-    # Ensure the feature vector matches the input expected by the model (640 features)
-    if feature_vector.shape[0] < 640:
-        padding = np.zeros(640 - feature_vector.shape[0])
-        feature_vector = np.concatenate([feature_vector, padding])
+    # Spectral centroid (brightness of the sound)
+    features['spectral_centroid'] = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
 
-    # Reshape the feature vector to match the expected input shape of (26, 1)
-    feature_vector_reshaped = feature_vector[:26].reshape(26, 1)  # Take first 26 features, reshape to (26, 1)
-    return feature_vector_reshaped.T  # Return as (1, 26, 1) for model input compatibility
+    # Spectral bandwidth (measures the width of the spectrum)
+    features['spectral_bandwidth'] = librosa.feature.spectral_bandwidth(y=y, sr=sr).mean()
 
-# Perform prediction with the model
-def predict(model, features):
+    # Spectral roll-off (the frequency below which most of the energy lies)
+    features['rolloff'] = librosa.feature.spectral_rolloff(y=y, sr=sr).mean()
+
+    # Zero crossing rate (rate at which the signal changes sign)
+    features['zero_crossing_rate'] = librosa.feature.zero_crossing_rate(y).mean()
+
+    # MFCCs (Mel Frequency Cepstral Coefficients)
+    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=20)  # Using 20 MFCCs (as in the notebook)
+    for i in range(1, 21):  # Loop to assign the mean of each MFCC
+        features[f'mfcc{i}'] = mfccs[i-1].mean()
+
+    return features
+
+# Prepare input features for prediction (wrap in a DataFrame to match training format)
+def prepare_input(audio_path):
+    features = extract_features(audio_path)
+    return pd.DataFrame([features])  # Wrap the features in a DataFrame
+
+# Function to perform prediction
+def predict(model, audio_path):
     print("Making prediction...")  # Debugging
     try:
-        # Get the raw output from the model prediction
-        probabilities = model.predict(features)
+        # Prepare features from the audio file
+        input_features = prepare_input(audio_path)
+        input_features = input_features.values  # Convert DataFrame to numpy array (for model input)
 
-        # DEBUG: Directly print the raw output (as a numpy array) to inspect it
-        print(f"Raw output (probabilities array): {probabilities}")
-
-        # Convert the output into a Python list (to avoid numpy-related issues)
-        probabilities_list = probabilities.tolist()  # Convert numpy array to list
-        print(f"Raw output (converted to list): {probabilities_list}")
-
-        # Get prediction index and map it to the label
-        prediction_index = np.argmax(probabilities, axis=1)[0]
-        confidence = probabilities[0][prediction_index] * 100
+        # Predict using the model
+        prediction = model.predict(input_features)
+        
+        # Get the predicted class index
+        predicted_class = np.argmax(prediction)
         
         # Map index to label
-        label_mapping = {0: "Fake", 1: "Partial_Fake", 2: "Real"}
-        label = label_mapping.get(prediction_index, "Unknown")  # Default to "Unknown" if not found
-
-        # DEBUG: Print the confidence value and label
-        print(f"Prediction label: {label}")
-        print(f"Prediction confidence (raw): {confidence}%")
-
+        label_map = {0: 'Fake', 1: 'Partial_Fake', 2: 'Real'}
+        label = label_map[predicted_class]
+        
+        # Confidence is the probability of the predicted class
+        confidence = prediction[0][predicted_class] * 100
+        
         # Return the result as JSON
         return {"label": label, "confidence": confidence}
     except Exception as e:
@@ -117,11 +113,8 @@ def main():
         # Load the model
         model = load_model_from_h5("model/3Class_deepfake_cnn_model.h5")
         
-        # Extract features from the audio
-        features = extract_features(audio_path)
-        
         # Get prediction from the model
-        result = predict(model, features)
+        result = predict(model, audio_path)
         
         # Return the result as a valid JSON object to the backend
         print(json.dumps(result, ensure_ascii=True))

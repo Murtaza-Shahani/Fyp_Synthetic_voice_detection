@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import Button from "./ui/Button";
 import { useState, useEffect } from "react";  // Use state and effect for conditionally showing buttons
+import { ToastContainer, toast } from "react-toastify"; // Import ToastContainer and toast
+import "react-toastify/dist/ReactToastify.css";  // Import CSS for Toastify
 
 function Navigation() {
   const navigate = useNavigate();
@@ -20,7 +22,17 @@ function Navigation() {
     // Remove the JWT token from localStorage
     localStorage.removeItem("authToken");
 
-    // Redirect to login page after logout
+    // Update the login state immediately
+    setIsLoggedIn(false);
+
+    // Show success flash message
+        toast.success("Logout  successful!", {
+          position: "top-center",
+          autoClose: 1000,  // auto close after 3 seconds
+          hideProgressBar: true,
+        });
+
+    // Redirect to home page after logout
     navigate("/");
   };
 
@@ -42,9 +54,6 @@ function Navigation() {
             <Link to="/detection" className="text-gray-600 hover:text-blue-600">
               Detection
             </Link>
-            {/* <Link to="/contact" className="text-gray-600 hover:text-blue-600">
-              Contact
-            </Link> */}
           </div>
 
           <div className="flex items-center space-x-4">
@@ -67,6 +76,9 @@ function Navigation() {
           </div>
         </div>
       </div>
+
+      {/* ToastContainer to show success/error messages */}
+     <ToastContainer />
     </nav>
   );
 }
