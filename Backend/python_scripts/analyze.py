@@ -7,6 +7,7 @@ from tensorflow.keras.models import load_model
 import os
 from pathlib import Path
 import pandas as pd
+from joblib import load  # Added to load the scaler
 
 # Force UTF-8 encoding by setting PYTHONUTF8 environment variable
 os.environ["PYTHONUTF8"] = "1"  # Forces UTF-8 encoding for all string operations
@@ -21,6 +22,9 @@ def load_model_from_h5(model_path):
     # Print only the model input shape summary to ensure we know the expected input format
     print(f"Model's expected input shape: {model.input_shape}")
     return model
+
+# Load the saved scaler
+scaler = load(r"C:\Users\G M\Desktop\Synthetic Voice Detection\Backend\Model\audio_feature_scaler.pkl")
 
 # Feature extraction function (modified to match notebook features)
 def extract_features(audio_path):
@@ -78,6 +82,12 @@ def predict(model, audio_path):
         input_features = prepare_input(audio_path)
         input_features = input_features.values  # Convert DataFrame to numpy array (for model input)
 
+        # Normalize the features using the loaded scaler
+        input_features = scaler.transform(input_features)  # Apply scaling
+
+        # Reshape the input to match the CNN model input shape (1, N, 1)
+        input_features = input_features.reshape(1, input_features.shape[1], 1)
+
         # Predict using the model
         prediction = model.predict(input_features)
         
@@ -89,8 +99,8 @@ def predict(model, audio_path):
         label = label_map[predicted_class]
         
         # Confidence is the probability of the predicted class
-        confidence = prediction[0][predicted_class] * 100
-        
+        confidence = round(prediction[0][predicted_class] * 100, 3)
+
         # Return the result as JSON
         return {"label": label, "confidence": confidence}
     except Exception as e:
@@ -111,7 +121,7 @@ def main():
             raise FileNotFoundError(f"The file at {audio_path} does not exist.")
         
         # Load the model
-        model = load_model_from_h5("model/3Class_deepfake_cnn_model.h5")
+        model = load_model_from_h5("model/3Class_deepfake_cnn10_model.h5")
         
         # Get prediction from the model
         result = predict(model, audio_path)

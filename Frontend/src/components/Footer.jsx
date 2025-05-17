@@ -21,11 +21,11 @@ function Footer() {
           {/* Column 2 - Navigation Links */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <h3 className="font-semibold mb-4">Company</h3>
+              <h3 className="font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/about" className="hover:text-gray-200">
-                    About
+                  <Link to="/" className="hover:text-gray-200">
+                    Home
                   </Link>
                 </li>
                 <li>
@@ -34,8 +34,8 @@ function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="hover:text-gray-200">
-                    Contact
+                  <Link to="/detection" className="hover:text-gray-200">
+                    Detection
                   </Link>
                 </li>
               </ul>

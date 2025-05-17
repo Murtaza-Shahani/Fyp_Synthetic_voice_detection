@@ -8,6 +8,7 @@ import Detection from "./pages/Detection";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
+import AboutTeam from "./pages/AboutTeam";
 
 const AppLayout = ({ children }) => {
   return (
@@ -46,6 +47,15 @@ const App = () => {
             <Detection />
           </AppLayout>
         }
+        
+      />
+       <Route
+        path="/about-team"
+        element={
+          <AppLayout>
+            <AboutTeam />
+          </AppLayout>
+        }
       />
       {/* <Route
         path="/contact"
@@ -55,6 +65,7 @@ const App = () => {
           </AppLayout>
         }
       /> */}
+      
 
       {/* Full page routes (no Header/Footer) */}
       <Route path="/login" element={<Login />} />

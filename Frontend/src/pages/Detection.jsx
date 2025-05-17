@@ -129,30 +129,43 @@ function Detection({ isHome = false }) {
   
 
   // Handle Tempered Analysis
-  const handleSubmitTempered = async (e) => {
-    e.preventDefault();
-    if (!fileTempered) {
-      setErrorTempered("Please select a file to upload.");
-      return;
-    }
-    setIsAnalyzingTempered(true);
-    setErrorTempered("");
-    const formData = new FormData();
-    formData.append("audio", fileTempered);
-    try {
-      const response = await fetch("http://localhost:5000/analyze-tempered", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      setResultTempered({ isReal: data.isReal, confidence: data.confidence });
-      setDescriptionTempered(data.description); // <-- Description from backend
-    } catch (error) {
-      setErrorTempered("Error analyzing audio. Please try again.");
-    }
-    setIsAnalyzingTempered(false);
-  };
+const handleSubmitTempered = async (e) => {
+  e.preventDefault();
+  if (!fileTempered) {
+    setErrorTempered("Please select a file to upload.");
+    return;
+  }
+  setIsAnalyzingTempered(true);
+  setErrorTempered("");
+  const formData = new FormData();
+  formData.append("audio", fileTempered);
+  try {
+    const response = await fetch("http://localhost:5000/analyze-tempered", {
+      method: "POST",
+      body: formData,
+    });
 
+    const data = await response.json();
+
+    // Log the response data to verify it
+    console.log("Backend Response:", data);
+
+    // Check if the response contains descriptions for both halves
+    if (data.firstHalfDescription && data.secondHalfDescription) {
+      // Set descriptions in the state
+      setDescriptionTempered({
+        firstHalf: data.firstHalfDescription,
+        secondHalf: data.secondHalfDescription,
+      });
+    } else {
+      setErrorTempered("Invalid response from backend.");
+    }
+  } catch (error) {
+    setErrorTempered("Error analyzing audio. Please try again.");
+    console.error("Error:", error);
+  }
+  setIsAnalyzingTempered(false);
+};
   // Reset Binary Form
   const resetFormBinary = () => {
     setFileBinary(null);
@@ -207,8 +220,8 @@ function Detection({ isHome = false }) {
               {/* Binary Classification Section */}
               <div className="w-full md:w-[48%] bg-white p-8 rounded-lg shadow-md">
                 <form onSubmit={handleSubmitBinary}>
-                  <h2 className="text-2xl font-bold mb-4">Binary Classification</h2>
-                  <p className="text-gray-600 mb-4">Supported: MP3, WAV, M4A (Max 10MB)</p>
+                  <h2 className="text-2xl font-bold mb-4">Multi Class Classification</h2>
+                  <p className="text-gray-600 mb-4">Supported: WAV (Max 6 Seconds)</p>
 
                   {/* Upload Area */}
                   <div className="flex flex-col items-center border-2 border-dashed border-gray-300 rounded-lg p-8 mb-4">
@@ -262,7 +275,7 @@ function Detection({ isHome = false }) {
     <ReactAudioSpectrum
       id="audio-spectrum-binary"
       height={200}
-      width={640}
+      width={440}
       audioId="audio-element-binary"
       capColor="blue"
       capHeight={2}
@@ -291,7 +304,7 @@ function Detection({ isHome = false }) {
               <div className="w-full md:w-[48%] bg-white p-8 rounded-lg shadow-md">
                 <form onSubmit={handleSubmitTempered}>
                   <h2 className="text-2xl font-bold mb-4">Tempered Detection</h2>
-                  <p className="text-gray-600 mb-4">Supported: MP3, WAV, M4A (Max 10MB)</p>
+                  <p className="text-gray-600 mb-4">Supported: WAV (Max 4 Seconds)</p>
 
                   {/* Upload Area */}
                   <div className="flex flex-col items-center border-2 border-dashed border-gray-300 rounded-lg p-8 mb-4">
@@ -317,54 +330,42 @@ function Detection({ isHome = false }) {
                 </form>
 
                 {/* Result */}
-                {resultTempered && (
-                  <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-                    <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">Detection Result:</span>
-                      <span className={`font-bold ${!resultTempered.isReal ? "text-green-600" : "text-red-600"}`}>
-                        {!resultTempered.isReal ? "Real Voice" : "Synthetic Voice"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between mb-4">
-                      <span className="font-medium">Confidence:</span>
-                      <span className="font-bold">{resultTempered.confidence}%</span>
-                    </div>
+                
+{descriptionTempered && ( 
+  <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+    <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
+    <div className="flex flex-row mb-2">
+      <span className="font-medium mr-4">First Half Result:</span>
+      <span className="font-bold text-blue-600 mr-6">{descriptionTempered.firstHalf}</span> {/* Display first half description */}
+      
+      <span className="font-medium mr-4">Second Half Result:</span>
+      <span className="font-bold text-blue-600">{descriptionTempered.secondHalf}</span> {/* Display second half description */}
+    </div>
+    {/* Audio Spectrum */}
+    <ReactAudioSpectrum
+      id="audio-spectrum-tempered"
+      height={200}
+      width={440}
+      audioId="audio-element-tempered"
+      capColor="blue"
+      capHeight={2}
+      meterWidth={2}
+      meterCount={512}
+      value={1}
+      borderColor={"transparent"}
+      fftSize={512}
+      backgroundColor={"#f0f0f0"}
+      gradientStops={[0, 0.5, 1]}
+      gradientColors={["#4f46e5", "#06b6d4", "#3b82f6"]}
+    />
+    {audioUrlTempered && <audio id="audio-element-tempered" src={audioUrlTempered} controls className="w-full mt-4" />}
 
-                    {/* Audio Spectrum */}
-                    <ReactAudioSpectrum
-                      id="audio-spectrum-tempered"
-                      height={200}
-                      width={640}
-                      audioId="audio-element-tempered"
-                      capColor="blue"
-                      capHeight={2}
-                      meterWidth={2}
-                      meterCount={512}
-                      value={1}
-                      borderColor={"transparent"}
-                      fftSize={512}
-                      backgroundColor={"#f0f0f0"}
-                      gradientStops={[0, 0.5, 1]}
-                      gradientColors={["#4f46e5", "#06b6d4", "#3b82f6"]}
-                    />
-                    {audioUrlTempered && <audio id="audio-element-tempered" src={audioUrlTempered} controls className="w-full mt-4" />}
-
-                    {/* Description for Tempered Section */}
-                    {descriptionTempered && (
-                      <div className="mt-4 text-left">
-                        <h4 className="font-medium mb-2">Voice Authenticity Segments:</h4>
-                        <p className="text-gray-700 text-sm whitespace-pre-line">{descriptionTempered}</p>
-                      </div>
-                    )}
-
-                    {/* Reset */}
-                    <Button onClick={resetFormTempered} variant="secondary" className="w-full mt-4">
-                      Analyze Another File
-                    </Button>
-                  </div>
-                )}
-              </div>
+    {/* Reset */}
+    <Button onClick={resetFormTempered} variant="secondary" className="w-full mt-4">
+      Analyze Another File
+    </Button>
+  </div>
+)}              </div>
             </div>
           </div>
         </section>

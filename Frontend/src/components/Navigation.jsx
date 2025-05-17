@@ -18,22 +18,28 @@ function Navigation() {
     }
   }, []);  // Empty dependency array to check only once when component mounts
 
-  const handleLogout = () => {
-    // Remove the JWT token from localStorage
-    localStorage.removeItem("authToken");
+const handleLogout = () => {
+  // Remove the JWT token from localStorage
+  localStorage.removeItem("authToken");
+ navigate("/");  // Redirect to home page after logout
+  // Update the login state immediately
+  setIsLoggedIn(false);
+  
+  // Show success flash message
+  //toast.success("Logout successful!", {
+    //position: "top-center",
+    //autoClose: 1000,  // auto close after 1 second
+    //hideProgressBar: true,
+  //});
 
-    // Update the login state immediately
-    setIsLoggedIn(false);
-
-    // Show success flash message
-        toast.success("Logout  successful!", {
-          position: "top-center",
-          autoClose: 1000,  // auto close after 3 seconds
-          hideProgressBar: true,
-        });
+  // Delay the navigation to allow the toast to finish
+//   setTimeout(() => {
+//     navigate("/");  // Redirect to home page after logout
+//   }, 1000);  // Wait for 1 second
+// };c
 
     // Redirect to home page after logout
-    navigate("/");
+    // navigate("/");
   };
 
   return (

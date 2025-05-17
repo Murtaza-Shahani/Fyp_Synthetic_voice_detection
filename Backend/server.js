@@ -120,15 +120,21 @@ app.post("/analyze-tempered", upload.single("audio"), (req, res) => {
     }
 
     try {
-      // Extract last valid JSON line from Python output
+      // Extract the last valid JSON line from Python output
       const lines = result.trim().split("\n");
       const lastLine = lines.reverse().find(line => line.trim().startsWith("{") && line.trim().endsWith("}"));
       const prediction = JSON.parse(lastLine);
 
-      // Update the result to include 3 classes
+      // Log the correct output before sending the response
+      console.log("Sending description:", {
+        firstHalfDescription: prediction.first_half,
+        secondHalfDescription: prediction.second_half
+      });
+
+      // Send the correct description to frontend
       res.json({
-        label: prediction.label,  // Real, Partial_Fake, Fake
-        confidence: prediction.confidence
+        firstHalfDescription: prediction.first_half,  // Send first half directly
+        secondHalfDescription: prediction.second_half  // Send second half directly
       });
     } catch (error) {
       console.error("JSON Parse Error:", error.message);
