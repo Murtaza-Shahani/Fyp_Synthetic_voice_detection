@@ -7,7 +7,7 @@ const fs = require("fs");
 const axios = require('axios');
 const FormData = require('form-data');
 
-
+require('dotenv').config();
 const app = express();
 app.use(cors());
 app.use(express.json());

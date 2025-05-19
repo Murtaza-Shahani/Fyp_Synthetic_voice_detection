@@ -36,7 +36,8 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      const response = await axios.post("http://localhost:5000/api/users/add-user", formData);
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/users/add-user`, formData);
+
       if (response.data.message) {
         toast.success("Account created successfully! Redirecting to login...");
         setTimeout(() => {

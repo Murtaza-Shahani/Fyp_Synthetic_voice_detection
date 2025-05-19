@@ -110,7 +110,7 @@ function Detection({ isHome = false }) {
     const formData = new FormData();
     formData.append("audio", fileBinary);
     try {
-      const response = await fetch("http://localhost:5000/analyze", {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/analyze`, {
         method: "POST",
         body: formData,
       });
@@ -140,7 +140,8 @@ const handleSubmitTempered = async (e) => {
   const formData = new FormData();
   formData.append("audio", fileTempered);
   try {
-    const response = await fetch("http://localhost:5000/analyze-tempered", {
+    const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/analyze-tempered`, 
+ {
       method: "POST",
       body: formData,
     });
