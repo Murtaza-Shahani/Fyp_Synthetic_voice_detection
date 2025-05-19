@@ -4,6 +4,9 @@ const { spawn } = require("child_process");
 const path = require("path");
 const cors = require("cors");
 const fs = require("fs");
+const axios = require('axios');
+const FormData = require('form-data');
+
 
 const app = express();
 app.use(cors());
@@ -34,113 +37,190 @@ const upload = multer({ storage });
 // Handle audio analysis request for 3 classes (Real, Partial_Fake, Fake)
 // ... (keep your existing imports and setup)
 
-app.post("/analyze", upload.single("audio"), (req, res) => {
+// app.post("/analyze", upload.single("audio"), (req, res) => {
+//   if (!req.file) {
+//     return res.status(400).json({ error: "No file uploaded." });
+//   }
+
+//   const audioFilePath = path.join(uploadsDir, req.file.filename);
+//   console.log(`Running Python script with file: ${audioFilePath}`);
+
+//   const pythonProcess = spawn("python", ["python_scripts/analyze.py", audioFilePath]);
+
+//   let result = "";
+//   let errorOutput = "";
+
+//   pythonProcess.stdout.on("data", (data) => {
+//     console.log("Python Output:", data.toString());
+//     result += data.toString();
+//   });
+
+//   pythonProcess.stderr.on("data", (data) => {
+//     console.error("Python Error:", data.toString());
+//     errorOutput += data.toString();
+//   });
+
+//   pythonProcess.on("close", (code) => {
+//     // Clean up the uploaded file
+//     fs.unlink(audioFilePath, (err) => {
+//       if (err) console.error("Error deleting file:", err);
+//     });
+
+//     if (code !== 0) {
+//       return res.status(500).json({ 
+//         error: "Analysis failed",
+//         details: errorOutput 
+//       });
+//     }
+
+//     try {
+//       // Find the last valid JSON output
+//       const jsonLines = result.split('\n')
+//         .filter(line => line.trim().startsWith('{') && line.trim().endsWith('}'));
+      
+//       if (jsonLines.length === 0) {
+//         throw new Error("No valid JSON output from Python script");
+//       }
+
+//       const prediction = JSON.parse(jsonLines[jsonLines.length - 1]);
+//       res.json(prediction);
+//     } catch (error) {
+//       console.error("Processing Error:", error);
+//       res.status(500).json({ 
+//         error: "Failed to process results",
+//         details: error.message 
+//       });
+//     }
+//   });
+// });
+
+// // ... (keep the rest of your server.js)
+// // Handle Tempered Audio Analysis request
+// app.post("/analyze-tempered", upload.single("audio"), (req, res) => {
+//   if (!req.file) {
+//     return res.status(400).json({ error: "No file uploaded." });
+//   }
+
+//   const audioFilePath = path.join(uploadsDir, req.file.filename);
+//   console.log(`Running Python script with file: ${audioFilePath}`);
+
+//   const pythonProcess = spawn("python", ["python_scripts/analyze_tempered.py", audioFilePath]);
+
+//   let result = "";
+
+//   pythonProcess.stdout.on("data", (data) => {
+//     console.log("Python Output:", data.toString());
+//     result += data.toString();
+//   });
+
+//   pythonProcess.stderr.on("data", (data) => {
+//     console.error("Python Error:", data.toString());
+//   });
+
+//   pythonProcess.on("close", (code) => {
+//     if (code !== 0) {
+//       return res.status(500).json({ error: "Python script execution failed." });
+//     }
+
+//     try {
+//       // Extract the last valid JSON line from Python output
+//       const lines = result.trim().split("\n");
+//       const lastLine = lines.reverse().find(line => line.trim().startsWith("{") && line.trim().endsWith("}"));
+//       const prediction = JSON.parse(lastLine);
+
+//       // Log the correct output before sending the response
+//       console.log("Sending description:", {
+//         firstHalfDescription: prediction.first_half,
+//         secondHalfDescription: prediction.second_half
+//       });
+
+//       // Send the correct description to frontend
+//       res.json({
+//         firstHalfDescription: prediction.first_half,  // Send first half directly
+//         secondHalfDescription: prediction.second_half  // Send second half directly
+//       });
+//     } catch (error) {
+//       console.error("JSON Parse Error:", error.message);
+//       res.status(500).json({ error: "Invalid response from Python script." });
+//     }
+//   });
+// });
+
+// Forward audio to Flask multiclass API
+app.post("/analyze", upload.single("audio"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded." });
   }
 
-  const audioFilePath = path.join(uploadsDir, req.file.filename);
-  console.log(`Running Python script with file: ${audioFilePath}`);
+  const filePath = path.join(uploadsDir, req.file.filename);
 
-  const pythonProcess = spawn("python", ["python_scripts/analyze.py", audioFilePath]);
+  try {
+    const form = new FormData();
+    form.append("audio", fs.createReadStream(filePath));
 
-  let result = "";
-  let errorOutput = "";
+    const response = await axios.post("http://127.0.0.1:5000/predict", form, {
+      headers: form.getHeaders(),
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    });
 
-  pythonProcess.stdout.on("data", (data) => {
-    console.log("Python Output:", data.toString());
-    result += data.toString();
-  });
-
-  pythonProcess.stderr.on("data", (data) => {
-    console.error("Python Error:", data.toString());
-    errorOutput += data.toString();
-  });
-
-  pythonProcess.on("close", (code) => {
-    // Clean up the uploaded file
-    fs.unlink(audioFilePath, (err) => {
+    // Clean up uploaded file
+    fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting file:", err);
     });
 
-    if (code !== 0) {
-      return res.status(500).json({ 
-        error: "Analysis failed",
-        details: errorOutput 
-      });
-    }
+    // Send Flask API response to frontend
+    res.json(response.data);
+  } catch (error) {
+    // Clean up on error too
+    fs.unlink(filePath, (err) => {
+      if (err) console.error("Error deleting file:", err);
+    });
 
-    try {
-      // Find the last valid JSON output
-      const jsonLines = result.split('\n')
-        .filter(line => line.trim().startsWith('{') && line.trim().endsWith('}'));
-      
-      if (jsonLines.length === 0) {
-        throw new Error("No valid JSON output from Python script");
-      }
-
-      const prediction = JSON.parse(jsonLines[jsonLines.length - 1]);
-      res.json(prediction);
-    } catch (error) {
-      console.error("Processing Error:", error);
-      res.status(500).json({ 
-        error: "Failed to process results",
-        details: error.message 
-      });
-    }
-  });
+    console.error("Error calling Flask multiclass API:", error.message);
+    res.status(500).json({ error: "Failed to get prediction from Python service." });
+  }
 });
 
-// ... (keep the rest of your server.js)
-// Handle Tempered Audio Analysis request
-app.post("/analyze-tempered", upload.single("audio"), (req, res) => {
+// Forward audio to Flask tempered API
+// Forward audio to Flask tempered API
+app.post("/analyze-tempered", upload.single("audio"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded." });
   }
 
-  const audioFilePath = path.join(uploadsDir, req.file.filename);
-  console.log(`Running Python script with file: ${audioFilePath}`);
+  const filePath = path.join(uploadsDir, req.file.filename);
 
-  const pythonProcess = spawn("python", ["python_scripts/analyze_tempered.py", audioFilePath]);
+  try {
+    const form = new FormData();
+    form.append("audio", fs.createReadStream(filePath));
 
-  let result = "";
+    const response = await axios.post("http://127.0.0.1:5001/predict", form, {
+      headers: form.getHeaders(),
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    });
 
-  pythonProcess.stdout.on("data", (data) => {
-    console.log("Python Output:", data.toString());
-    result += data.toString();
-  });
+    fs.unlink(filePath, (err) => {
+      if (err) console.error("Error deleting file:", err);
+    });
 
-  pythonProcess.stderr.on("data", (data) => {
-    console.error("Python Error:", data.toString());
-  });
+    // Map keys from Flask API to what React expects
+    const data = response.data;
+    const formattedResponse = {
+      firstHalfDescription: data.first_half || "N/A",
+      secondHalfDescription: data.second_half || "N/A",
+    };
 
-  pythonProcess.on("close", (code) => {
-    if (code !== 0) {
-      return res.status(500).json({ error: "Python script execution failed." });
-    }
+    res.json(formattedResponse);
+  } catch (error) {
+    fs.unlink(filePath, (err) => {
+      if (err) console.error("Error deleting file:", err);
+    });
 
-    try {
-      // Extract the last valid JSON line from Python output
-      const lines = result.trim().split("\n");
-      const lastLine = lines.reverse().find(line => line.trim().startsWith("{") && line.trim().endsWith("}"));
-      const prediction = JSON.parse(lastLine);
-
-      // Log the correct output before sending the response
-      console.log("Sending description:", {
-        firstHalfDescription: prediction.first_half,
-        secondHalfDescription: prediction.second_half
-      });
-
-      // Send the correct description to frontend
-      res.json({
-        firstHalfDescription: prediction.first_half,  // Send first half directly
-        secondHalfDescription: prediction.second_half  // Send second half directly
-      });
-    } catch (error) {
-      console.error("JSON Parse Error:", error.message);
-      res.status(500).json({ error: "Invalid response from Python script." });
-    }
-  });
+    console.error("Error calling Flask tempered API:", error.message);
+    res.status(500).json({ error: "Failed to get prediction from Tempered Python service." });
+  }
 });
 
 // Routes for other API endpoints
